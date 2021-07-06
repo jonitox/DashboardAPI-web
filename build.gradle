@@ -1,0 +1,46 @@
+buildscript {
+	ext {
+		springBootVersion = '2.1.15.RELEASE'
+		krakenPluginVersion = '2.0.8'
+	}
+
+	repositories {
+		maven { url "http://repo.daumkakao.io/content/groups/daum-public" }
+		maven { url "http://maven.daumcorp.com/content/groups/daum-media-group" }
+	}
+
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+		classpath("com.kakao.kraken:gradle-plugin:${krakenPluginVersion}")
+	}
+}
+
+repositories {
+	maven { url "http://repo.daumkakao.io/content/groups/daum-public" }
+	maven { url "http://maven.daumcorp.com/content/groups/daum-media-group" }
+}
+
+apply plugin: 'java'
+apply plugin: 'groovy'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'idea'
+
+apply plugin: 'com.kakao.kraken'
+
+group = 'com.kakao'
+sourceCompatibility = 1.11
+targetCompatibility = 1.11
+
+dependencies {
+	// test
+	testCompile("org.springframework.boot:spring-boot-starter-test")
+	testCompile('org.spockframework:spock-core:1.1-groovy-2.4')
+	testCompile('org.spockframework:spock-spring:1.1-groovy-2.4')
+
+	compile('com.kakao.kraken:core:2.1.2')
+	compile('com.kakao.kraken:common:2.2.7')
+	compile('com.kakao.kraken:vault:2.3.0')
+
+	compile group: 'org.springframework.boot', name: 'spring-boot-starter-freemarker'
+}

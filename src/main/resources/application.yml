@@ -1,0 +1,13 @@
+server:
+  port: 8080
+  tomcat:
+    max-threads: 500
+
+spring:
+  freemarker:
+    suffix: .ftl
+  main:
+    allow-bean-definition-overriding: true
+
+sentry:
+  dsn: https://72d4c5fad9814bf98df9295fb251044e@aem-collector.daumkakao.io/1042
