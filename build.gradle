@@ -43,4 +43,8 @@ dependencies {
 	compile('com.kakao.kraken:vault:2.3.0')
 
 	compile group: 'org.springframework.boot', name: 'spring-boot-starter-freemarker'
+//
+//	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+//	compile 'mysql:mysql-connector-java'
+
 }

@@ -1,0 +1,52 @@
+{
+  "name": "starter-web",
+  "version": "1.0.0",
+  "description": "starter-web",
+  "main": "index.js",
+  "scripts": {
+    "start": "PROJECT_NAME=auto NODE_ENV=development webpack-dev-server --progress --color --inline --config ./webpack/webpack.config.js",
+    "dev": "PROJECT_NAME=auto NODE_ENV=development webpack --progress --profile --color --config ./webpack/webpack.config.js",
+    "build": "PROJECT_NAME=auto NODE_ENV=production webpack --progress --profile --color --config ./webpack/webpack.config.js",
+    "watch": "PROJECT_NAME=auto NODE_ENV=development webpack --watch --progress --profile --color --config ./webpack/webpack.config.js",
+    "test": "PROJECT_NAME=auto NODE_ENV=development webpack --config ./webpack/webpack.test.js && mocha src/main/resources/static/dist/test/autoTestBundle.merged.js",
+    "test_g": "PROJECT_NAME=auto NODE_ENV=development webpack --config ./webpack/webpack.test.js && mocha src/main/resources/static/dist/test/autoTestBundle.merged.js -g"
+  },
+  "dependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.0",
+    "babel-preset-stage-3": "^6.24.1",
+    "bootstrap": "^4.3.1",
+    "bootstrap-vue": "^2.0.0-rc.22",
+    "brand-colors": "^2.0.1",
+    "clean-webpack-plugin": "^0.1.19",
+    "cross-env": "^5.0.5",
+    "css-loader": "^0.28.7",
+    "file-loader": "^1.1.4",
+    "jquery": "^3.3.1",
+    "js-base64": "^2.5.1",
+    "js-cookie": "^2.2.0",
+    "lodash": "^4.17.11",
+    "mini-css-extract-plugin": "^0.4.4",
+    "moment": "^2.24.0",
+    "node-sass": "^4.11.0",
+    "perfect-scrollbar": "^1.1.0",
+    "sass-loader": "7.1.0",
+    "uglifyjs-webpack-plugin": "^2.0.1",
+    "vue": "^2.6.10",
+    "vue-json-viewer": "^2.2.16",
+    "vue-loader": "15.4.2",
+    "vue-router": "^3.0.1",
+    "vue-template-compiler": "^2.6.10",
+    "webpack": "4.25.1",
+    "webpack-cli": "^3.1.2",
+    "webpack-merge": "^4.1.2",
+    "@kakao/webpack-media-tenth2-plugin": "^1.0.2",
+    "write-webpack-plugin": "^1.1.0"
+  },
+  "devDependencies": {
+    "webpack-dev-server": "^3.1.10"
+  },
+  "author": "@@media.dev",
+  "license": "ISC"
+}
