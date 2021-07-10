@@ -1,17 +1,16 @@
 <template>
   <p>{{message}}</p>
 </template>
+
 <script>
 export default {
-  data: () => {
-return {
-  message: "hiass"
+  name: "#apps",
+  data: {
+    message:"jiosjo",
+  }
 }
-}
-}
-
 </script>
-<style>
+
+<style scoped>
 
 </style>
-

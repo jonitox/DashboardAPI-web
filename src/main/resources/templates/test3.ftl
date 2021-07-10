@@ -3,10 +3,10 @@
     <script src="/dist/app.merged.js"></script>
 </head>
 <body>
+yoyos
 
 <div id="app">
-    <p>{{ message }}</p>
-    <button v-on:click="reverseMessage">메시지 뒤집기</button>
-    <input v-model="message">
+</div>
+<div id="apps">
 </div>
 </body>
