@@ -3,10 +3,9 @@
     <script src="/dist/app.merged.js"></script>
 </head>
 <body>
-yoyos
 
 <div id="app">
 </div>
-<div id="apps">
-</div>
+<a href="/show">리스트 보기</a>
+
 </body>

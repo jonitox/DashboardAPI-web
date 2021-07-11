@@ -4,10 +4,12 @@
 
 <script>
 export default {
-  name: "#apps",
-  data: {
-    message:"jiosjo",
-  }
+  name: "deploymentListVue",
+  data: () => {
+    return {
+      message: "abcd"
+    }
+  },
 }
 </script>
 

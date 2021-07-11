@@ -5,7 +5,7 @@
 export default {
   data: () => {
 return {
-  message: "hiass"
+  message: "hi"
 }
 }
 }
