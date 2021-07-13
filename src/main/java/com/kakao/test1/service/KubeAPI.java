@@ -2,7 +2,10 @@ package com.kakao.test1.service;
 
 import com.kakao.kraken.vault.VaultAuthenticatorFactory;
 import com.kakao.test1.config.Dkosv3ContextSecret;
+import com.kakao.test1.exception.BadRequestException;
 import com.kakao.test1.exception.InvalidK8sContextException;
+import com.kakao.test1.model.BoatApp;
+import com.kakao.test1.model.BoatAppService;
 import com.kakao.test1.service.dkos.kubernetes.KubernetesApi;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
@@ -19,26 +22,24 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 @Slf4j
-@Service
-public class KubeObjService {
-    private Dkosv3ContextSecret dkosv3ContextSecret;
-    private static final String clusterName ="media-dev-ay1";
-    private static final String namespace = "kraken";
+public class KubeAPI {
 
-    @PostConstruct
-    public void init() throws InvalidK8sContextException {
-        final String secretPathFormat = "secret/media/kraken-dkosv3/%s";
-        final String contextName = getContextName(clusterName);
-        this.dkosv3ContextSecret = VaultAuthenticatorFactory.appRole("media")
-                .read(String.format(secretPathFormat, getContextName(clusterName)), Dkosv3ContextSecret.class)
-                .orElse(null);
-        if (dkosv3ContextSecret == null) {
-            // 데이터가 없을 경우 에러 발생
-            throw new InvalidK8sContextException(clusterName);
-        }
+    private Dkosv3ContextSecret dkosv3ContextSecret;
+    private static final String DEFAULT_NAMESPACE = "kraken";
+
+    public KubeAPI(Dkosv3ContextSecret dkosv3ContextSecret){
+        this.dkosv3ContextSecret = dkosv3ContextSecret;
+    }
+
+    public Dkosv3ContextSecret getDkosv3ContextSecret() {
+        return dkosv3ContextSecret;
     }
 
     public List<V1Deployment> getDeploymentList() {
@@ -46,7 +47,7 @@ public class KubeObjService {
         AppsV1Api api = new AppsV1Api(apiClient);
 
         try {
-            V1DeploymentList list = api.listNamespacedDeployment(namespace, "false", false, null, null, null, 999, null, null, false);
+            V1DeploymentList list = api.listNamespacedDeployment(DEFAULT_NAMESPACE, "false", false, null, null, null, 999, null, null, false);
 
             if(list==null){
                 return Collections.emptyList();
@@ -82,7 +83,7 @@ public class KubeObjService {
         CoreV1Api api = new CoreV1Api(apiClient);
 
         try {
-            V1ServiceList list = api.listNamespacedService(namespace, "false", false, null, null, null, 999, null, null, false);
+            V1ServiceList list = api.listNamespacedService(DEFAULT_NAMESPACE, "false", false, null, null, null, 999, null, null, false);
             if(list==null){
                 return Collections.emptyList();
             } else {
@@ -100,13 +101,13 @@ public class KubeObjService {
         return null;
     }
 
-    public List<ExtensionsV1beta1Ingress> getIngressList(String namespace) {
+    public List<ExtensionsV1beta1Ingress> getIngressList() {
 
         ApiClient apiClient = Config.fromToken(dkosv3ContextSecret.getUrl(), dkosv3ContextSecret.getToken(), false);
         ExtensionsV1beta1Api api = new ExtensionsV1beta1Api(apiClient);
 
         try {
-            ExtensionsV1beta1IngressList list = api.listNamespacedIngress(namespace, "false", false, null, null, null, 999, null, null, false);
+            ExtensionsV1beta1IngressList list = api.listNamespacedIngress(DEFAULT_NAMESPACE, "false", false, null, null, null, 999, null, null, false);
             if(list==null){
                 return Collections.emptyList();
             } else {
@@ -124,11 +125,39 @@ public class KubeObjService {
         return null;
     }
 
-    private String getContextName(String name) {
-        if (name.matches("-context$")) {
-            return name;
-        } else {
-            return name + "-context";
+    public V1Status deleteDeployment(String name) {
+        ApiClient apiClient = Config.fromToken(dkosv3ContextSecret.getUrl(), dkosv3ContextSecret.getToken(), false);
+        AppsV1Api api = new AppsV1Api(apiClient);
+
+        try {
+            return api.deleteNamespacedDeployment(name, DEFAULT_NAMESPACE, "false", null, null, false, null, null);
+        } catch (ApiException e) {
+            log.error(e.getMessage(), e);
+            return null;
+        }
+    }
+
+    public V1Status deleteIngress(String name) {
+        ApiClient apiClient = Config.fromToken(dkosv3ContextSecret.getUrl(), dkosv3ContextSecret.getToken(), false);
+        ExtensionsV1beta1Api api = new ExtensionsV1beta1Api(apiClient);
+
+        try {
+            return api.deleteNamespacedIngress(name, DEFAULT_NAMESPACE, "false", null, null, false, null, null);
+        } catch (ApiException e) {
+            log.error(e.getMessage(), e);
+            return null;
+        }
+    }
+
+    public V1Status deleteService(String name) {
+        ApiClient apiClient = Config.fromToken(dkosv3ContextSecret.getUrl(), dkosv3ContextSecret.getToken(), false);
+        CoreV1Api api = new CoreV1Api(apiClient);
+
+        try {
+            return api.deleteNamespacedService(name, DEFAULT_NAMESPACE, "false", null, null, false, null, null);
+        } catch (ApiException e) {
+            log.error(e.getMessage(), e);
+            return null;
         }
     }
 }
