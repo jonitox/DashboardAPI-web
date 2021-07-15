@@ -1,8 +1,6 @@
-package com.kakao.test1.service.dkos;
+package com.kakao.test1.service.kubernetes;
 
 import com.kakao.test1.exception.InvalidK8sContextException;
-import com.kakao.test1.service.KubeAPI;
-import com.kakao.test1.service.dkos.kubernetes.KubernetesApi;
 import com.kakao.kraken.vault.VaultAuthenticatorFactory;
 import com.kakao.test1.config.Dkosv3ContextSecret;
 import lombok.extern.slf4j.Slf4j;

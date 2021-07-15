@@ -7,7 +7,7 @@
 <div>
     <table>
         <th>
-            [디플로이먼트 목록]
+            [보트앱 목록]
         </th>
         <#list names as i >
             <tr>

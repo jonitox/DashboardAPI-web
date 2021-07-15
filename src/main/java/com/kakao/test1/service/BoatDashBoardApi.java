@@ -1,19 +1,17 @@
 package com.kakao.test1.service;
 
-import com.kakao.kraken.vault.VaultAuthenticatorFactory;
-import com.kakao.test1.config.Dkosv3ContextSecret;
 import com.kakao.test1.exception.BadRequestException;
 import com.kakao.test1.exception.InvalidK8sContextException;
 import com.kakao.test1.model.BoatApp;
 import com.kakao.test1.model.BoatAppService;
-import com.kakao.test1.service.dkos.KubernetesProxyService;
+import com.kakao.test1.service.kubernetes.KubeAPI;
+import com.kakao.test1.service.kubernetes.KubernetesProxyService;
 import io.kubernetes.client.openapi.models.ExtensionsV1beta1Ingress;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1Service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,8 +31,8 @@ public class BoatDashBoardApi {
     public BoatDashBoardApi(KubernetesProxyService kubernetesProxyService) {
         this.kubernetesProxyService = kubernetesProxyService;
     }
-    //    private Dkosv3ContextSecret dkosv3ContextSecret;
 
+    // 삭제: context를 한번 get -> api메소드 사용시마다 proxy를 통해 get하도록 변경. //
 //    @PostConstruct
 //    public void init() throws InvalidK8sContextException {
 //        final String secretPathFormat = "secret/media/kraken-dkosv3/%s";
@@ -49,22 +47,10 @@ public class BoatDashBoardApi {
 //    }
 
     private String extractBackendServiceNameFromIngress(ExtensionsV1beta1Ingress ingress) {
-        /** ! 중간중간 명시된 룰,서비스 등이 없을시 null, empty list exception 처리 / 해당 경우가 존재하는지? */
+        /**  중간에 null return시, empty list exception 처리 / 해당 경우가 존재하는지? */
         return ingress.getSpec().getRules().get(0).getHttp().getPaths().get(0).getBackend().getServiceName();
     }
 
-    // deprecated
-//    private Map<String, V1Deployment> findMatchedDeployment(BoatAppService service, List<V1Deployment> v1Deployments){
-//        String appValue = service.getService().getSpec().getSelector().get("app");
-//        return v1Deployments.stream().filter(deployment -> {
-//            String value = deployment.getMetadata().getLabels().get("app");
-//            if(value==null){
-//                return false;
-//            } else{
-//                return value.equals(appValue);
-//            }
-//        }).collect(Collectors.toMap(V1Deployment->V1Deployment.getMetadata().getLabels().get("version"), Function.identity()));
-//    }
 
     private BoatAppService findMatchedService(List<BoatAppService> boatAppServiceList, Map<String,String> deploymentLabels){
         return boatAppServiceList.stream()
@@ -94,7 +80,7 @@ public class BoatDashBoardApi {
 
     // get apps
     /** throw error? */
-    public List<BoatApp> getBoatApps(){
+    public List<BoatApp> getBoatAppList(){
         try{
             KubeAPI kubeApi = kubernetesProxyService.getContext(getContextName(clusterName));
             CompletableFuture<List<V1Deployment>> v1DeploymentsTask = CompletableFuture.supplyAsync(() -> kubeApi.getDeploymentList());
@@ -117,7 +103,6 @@ public class BoatDashBoardApi {
 
             // 디플로이먼트와 서비스 매치
             /** deprecated..
-//
 //            return BoatAppServiceList.parallelStream()
 //                    .map(boatAppService -> {
 //                        Map<String, V1Deployment> matchedDeployments = findMatchedDeployment(boatAppService, v1Deployments);
@@ -134,6 +119,7 @@ public class BoatDashBoardApi {
                                 findMatchedService(boatAppServiceList,  deployment.getMetadata().getLabels());
                         return new BoatApp(
                                 DEFAULT_NAMESPACE,
+                                clusterName,
                                 getContextName(clusterName),
                                 kubeApi.getDkosv3ContextSecret().getUrl(),
                                 deployment, boatAppService
@@ -148,19 +134,25 @@ public class BoatDashBoardApi {
     }
 
 
-    // delete app(with some versions)
+    // delete app(including all versions)
     public void deleteBoatApps(String appName){
-        List<BoatApp> selectedApps = getBoatApps().parallelStream()
-                .filter(app -> app.getName().equals(appName)).collect(Collectors.toList());
 
-        if(selectedApps.size()<=0){
-            log.error("Fail to remove {} {} - no app selected", appName);
+        BoatApp selectedApp = getBoatAppList().parallelStream()
+                .filter(app -> app.getName().equals(appName)).findAny().orElse(null);
+
+        if(selectedApp ==null){
+            log.error("Fail to rollBack {} {} - no app selected", appName);
         } else{
-            selectedApps.forEach(boatApp-> deleteBoatApp(boatApp));
+        String appLabel = selectedApp.getAppLabel();
+
+        List<BoatApp> appsToDelete = getBoatAppList().parallelStream()
+                .filter(app -> app.getAppLabel().equals(appLabel)).collect(Collectors.toList());
+
+        appsToDelete.forEach(boatApp-> deleteBoatApp(boatApp));
         }
     }
 
-    public void deleteBoatApp(BoatApp boatApp){
+    private void deleteBoatApp(BoatApp boatApp){
 
         V1Deployment deployment = boatApp.getDeployment();
         V1Service service = Optional.ofNullable(boatApp.getServiceAndIngress()).map(BoatAppService::getService).orElse(null);
@@ -169,7 +161,7 @@ public class BoatDashBoardApi {
         try{
             KubeAPI kubeApi = kubernetesProxyService.getContext(getContextName(clusterName));
 
-            /** status handling? */
+            /** todo: status handling */
             kubeApi.deleteDeployment(deployment.getMetadata().getName());
             if(service !=null){
                 kubeApi.deleteService(service.getMetadata().getName());
@@ -185,8 +177,79 @@ public class BoatDashBoardApi {
     }
 
     // rollBack or restart
+    public void rollBackOrRestart(String appName){
+        List<BoatApp> boatAppList = getBoatAppList();
+        // 비활성화할 앱
+        BoatApp selectedApp = boatAppList.parallelStream()
+                .filter(app -> app.getName().equals(appName)).findAny().orElse(null);
+        String appLabel = selectedApp.getAppLabel();
+
+        if(selectedApp ==null) {
+            log.error("Fail to rollBack {} {} - no app selected", appName);
+            return;
+        }
+        // 활성화할 앱
+        BoatApp appOfAnotherVersion = boatAppList.parallelStream()
+                .filter(app -> (!app.getName().equals(appName) && app.getAppLabel().equals(appLabel)))
+                .findAny().orElse(null);
+        if (appOfAnotherVersion ==null) {
+            log.error("Fail to rollBack {} {} - no other version existed", appName);
+            return;
+        }
 
 
+        try {
+            KubeAPI kubeApi = kubernetesProxyService.getContext(getContextName(clusterName));
+
+            Integer replicasDesired = selectedApp.getDeployment().getSpec().getReplicas();
+
+            // 활성화할 버전 디플로이먼트의 인스턴스 활성화
+            kubeApi.scaleDeployment(appOfAnotherVersion.getName(),replicasDesired);
+
+            // todo: 모두 up-to-date되면 // util 사용? or wait until up-to-date
+
+            // service selector의 version 변경
+            kubeApi.patchServiceSelector(
+                    selectedApp.getServiceAndIngress().getService().getMetadata().getName(),
+                    appOfAnotherVersion.getVersionLabel());
+
+            // 기존 디플로이먼트 인스턴스의 비활성화
+            kubeApi.scaleDeployment(appName, 0);
+;
+            }catch(InvalidK8sContextException e){
+                throw new BadRequestException(e);
+            }
+
+        }
+
+
+    public String getShortCut(String name) {
+        String indexName = "dkos_v3_"+clusterName+"-*";
+        String containerName = getContainerName(name);
+
+        /** todo: default값으로 변경? */
+        return "https://kemi-kibana5.9rum.cc/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-24h,mode:quick,to:now))&_a=(columns:!(log,kubernetes.namespace,kubernetes.container_name),filters:!(('$$hashKey':'object:94','$state':(store:appState),meta:(alias:!n,disabled:!f,index:'"
+                +indexName
+                +"',key:cluster_name,negate:!f,value:"
+                +clusterName
+                +"),query:(match:(cluster_name:(query:"
+                +clusterName
+                +",type:phrase)))),('$$hashKey':'object:4891','$state':(store:appState),meta:(alias:!n,disabled:!f,index:'"
+                +indexName
+                +"',key:kubernetes.namespace,negate:!f,value:kraken),query:(match:(kubernetes.namespace:(query:kraken,type:phrase)))),('$$hashKey':'object:94','$state':(store:appState),meta:(alias:!n,disabled:!f,index:'"
+                +indexName
+                +"',key:kubernetes.container_name,negate:!f,value:"
+                +containerName
+                +"),query:(match:(kubernetes.container_name:(query:"
+                +containerName
+                +",type:phrase))))),index:'"
+                +indexName
+                +"',interval:auto,query:(query_string:(analyze_wildcard:!t,query:'*')),sort:!('@timestamp',desc))";
+    }
+
+    private String getContainerName(String name){
+        return name.substring(0,name.lastIndexOf('-'));
+    }
 
     private String getContextName(String name) {
         if (name.matches("-context$")) {
@@ -195,7 +258,5 @@ public class BoatDashBoardApi {
             return name + "-context";
         }
     }
-
-
 
 }
