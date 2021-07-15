@@ -22,7 +22,9 @@ public class KubeTest {
         KubernetesProxyService kubernetesProxyService = new KubernetesProxyService();
         BoatDashBoardApi boatDashBoardApi = new BoatDashBoardApi(kubernetesProxyService);
 
-        boatDashBoardApi.rollBackOrRestart("kraken-test1-development-master-green");
+//        boatDashBoardApi.deleteBoatApps("kraken-test1-development-master-green");
+////        boatDashBoardApi.rollBackOrRestart("kraken-test1-development-master-green");
+
 
     }
 

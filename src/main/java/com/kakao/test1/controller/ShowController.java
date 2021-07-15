@@ -7,9 +7,12 @@ import io.kubernetes.client.openapi.models.V1Deployment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 public class ShowController {
@@ -22,12 +25,30 @@ public class ShowController {
 
     @GetMapping("/show")
     public String showDeployList(Model model){
-        List<BoatApp> list = boatDashBoardApi.getBoatAppList();
-        List<String> nameList = new ArrayList<String>();
-        for(BoatApp item: list){
-            nameList.add(item.getName());
+        List<BoatApp> boatAppList = boatDashBoardApi.getBoatAppList();
+        List<Map<String, String>> boatAppListWithUrl = new ArrayList<>();
+
+        for(BoatApp item: boatAppList){
+            Map<String,String> info = new HashMap<>();
+            info.put("name", item.getName());
+            info.put("url", boatDashBoardApi.getShortCut(item.getName()));
+            boatAppListWithUrl.add(info);
         }
-        model.addAttribute("names", nameList);
+        model.addAttribute("appInfo", boatAppListWithUrl);
         return "showList";
     }
+
+    @GetMapping("/show/delete/{name}")
+    public String deleteBoatApp(){
+        // ..
+        return "";
+    }
+
+    @GetMapping("/show/rollback/{name}")
+        public String rollBackBoatApp(){
+            // ..
+            return "";
+    }
+
+
 }

@@ -141,7 +141,7 @@ public class BoatDashBoardApi {
                 .filter(app -> app.getName().equals(appName)).findAny().orElse(null);
 
         if(selectedApp ==null){
-            log.error("Fail to rollBack {} {} - no app selected", appName);
+            log.error("Fail to delete  {} {} - no app selected", appName);
         } else{
         String appLabel = selectedApp.getAppLabel();
 
@@ -221,7 +221,15 @@ public class BoatDashBoardApi {
             }
 
         }
-
+//        public void test (){
+//        try{
+//            KubeAPI kubeApi = kubernetesProxyService.getContext(getContextName(clusterName));
+//            kubeApi.scaleDeployment("kraken-test1-development-master-blue",0);
+//
+//        } catch(InvalidK8sContextException e){
+//            throw new BadRequestException(e);
+//        }
+//        }
 
     public String getShortCut(String name) {
         String indexName = "dkos_v3_"+clusterName+"-*";

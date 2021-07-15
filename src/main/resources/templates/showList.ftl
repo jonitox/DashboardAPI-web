@@ -9,10 +9,13 @@
         <th>
             [보트앱 목록]
         </th>
-        <#list names as i >
+        <#list appInfo as i >
             <tr>
                  <td>
-                    ${i}
+                    ${i["name"]}
+                </td>
+                <td>
+                    <A href = ${i["url"]} > 로그 보기 </A>
                 </td>
             </tr>
         </#list>
