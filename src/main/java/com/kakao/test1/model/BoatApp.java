@@ -4,8 +4,6 @@ import io.kubernetes.client.openapi.models.*;
 import lombok.Getter;
 
 import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Map;
 
 @Getter
 public class BoatApp {

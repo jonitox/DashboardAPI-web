@@ -236,15 +236,15 @@ public class BoatDashBoardApi {
         String containerName = getContainerName(name);
 
         /** todo: default값으로 변경? */
-        return "https://kemi-kibana5.9rum.cc/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-24h,mode:quick,to:now))&_a=(columns:!(log,kubernetes.namespace,kubernetes.container_name),filters:!(('$$hashKey':'object:94','$state':(store:appState),meta:(alias:!n,disabled:!f,index:'"
+        return "https://kemi-kibana5.9rum.cc/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-24h,mode:quick,to:now))&_a=(columns:!(log,kubernetes.namespace,kubernetes.container_name),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'"
                 +indexName
                 +"',key:cluster_name,negate:!f,value:"
                 +clusterName
                 +"),query:(match:(cluster_name:(query:"
                 +clusterName
-                +",type:phrase)))),('$$hashKey':'object:4891','$state':(store:appState),meta:(alias:!n,disabled:!f,index:'"
+                +",type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'"
                 +indexName
-                +"',key:kubernetes.namespace,negate:!f,value:kraken),query:(match:(kubernetes.namespace:(query:kraken,type:phrase)))),('$$hashKey':'object:94','$state':(store:appState),meta:(alias:!n,disabled:!f,index:'"
+                +"',key:kubernetes.namespace,negate:!f,value:kraken),query:(match:(kubernetes.namespace:(query:kraken,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'"
                 +indexName
                 +"',key:kubernetes.container_name,negate:!f,value:"
                 +containerName

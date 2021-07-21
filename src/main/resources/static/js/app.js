@@ -13,5 +13,4 @@ $(document).ready(()=>{
         data:{},
         render: h=> h(DeployList)
     });
-
 });
